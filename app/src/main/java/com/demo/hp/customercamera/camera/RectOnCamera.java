@@ -5,14 +5,18 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-
+import android.widget.Toast;
 
 
 public class RectOnCamera extends View {
@@ -21,9 +25,22 @@ public class RectOnCamera extends View {
     private int mScreenHeight;
     private Paint mPaint;
     private RectF mRectF;
+    private Paint mPaintCircle;
     // 圆
     private Point centerPoint;
     private int radio;
+
+    Canvas canvas;
+
+    Handler handler = new Handler(){
+        @Override
+        public void dispatchMessage(Message msg) {
+
+            mPaintCircle.setColor(Color.TRANSPARENT);
+            Log.d("GGGG","canvas = " + canvas);
+            invalidate();
+        }
+    };
 
     public RectOnCamera(Context context) {
         this(context, null);
@@ -48,6 +65,14 @@ public class RectOnCamera extends View {
     }
 
     private void initView(Context context) {
+        mPaintCircle = new Paint();
+        mPaintCircle.setAntiAlias(true);// 抗锯齿
+        mPaintCircle.setDither(true);// 防抖动
+        mPaintCircle.setColor(Color.WHITE);
+        mPaintCircle.setStrokeWidth(3);
+        mPaintCircle.setStyle(Paint.Style.STROKE);// 空心
+
+
         mPaint = new Paint();
         mPaint.setAntiAlias(true);// 抗锯齿
         mPaint.setDither(true);// 防抖动
@@ -65,12 +90,18 @@ public class RectOnCamera extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        this.canvas = canvas;
         mPaint.setColor(Color.RED);
         canvas.drawRect(mRectF, mPaint);
         mPaint.setColor(Color.WHITE);
         Log.i(TAG, "onDraw");
-        canvas.drawCircle(centerPoint.x,centerPoint.y, radio,mPaint);// 外圆
-        canvas.drawCircle(centerPoint.x,centerPoint.y, radio - 20,mPaint); // 内圆
+//        canvas.drawCircle(centerPoint.x,centerPoint.y, radio,mPaint);// 外圆
+//        canvas.drawCircle(centerPoint.x,centerPoint.y, radio - 20,mPaint); // 内圆
+
+
+        canvas.drawCircle(centerPoint.x,centerPoint.y, radio,mPaintCircle);// 外圆
+        canvas.drawCircle(centerPoint.x,centerPoint.y, radio - 20,mPaintCircle); // 内圆
+
     }
 
     @Override
@@ -82,7 +113,9 @@ public class RectOnCamera extends View {
                 int x = (int) event.getX();
                 int y = (int) event.getY();
                 centerPoint = new Point(x, y);
+                mPaintCircle.setColor(Color.BLUE);
                 invalidate();
+                handler.sendEmptyMessageDelayed(0,2000);
                 if (mIAutoFocus != null){
                     mIAutoFocus.autoFocus();
                 }
